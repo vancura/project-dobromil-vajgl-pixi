@@ -15,11 +15,7 @@ declare const IS_PRODUCTION: boolean;
  * @return {void}
  */
 export function checkBuildEnvironment(): void {
-    if (IS_PRODUCTION) {
-        console.log('Production build');
-    } else {
-        console.log('Debug build');
-
+    if (!IS_PRODUCTION) {
         new EventSource('/esbuild').addEventListener('change', (e: Event) => {
             if (e instanceof MessageEvent) {
                 const { added, removed, updated } = JSON.parse(e.data);
@@ -45,6 +41,8 @@ export function checkBuildEnvironment(): void {
                 }
             }
 
+            console.log('🔄 Reloading page');
+            console.log('— — —');
             location.reload();
         });
     }
