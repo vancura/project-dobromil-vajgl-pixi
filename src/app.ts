@@ -1,75 +1,77 @@
 import { Application, Sprite, Texture } from 'pixi.js';
 
-console.log('Hello World');
-
+// Declare a constant to check if the environment is production.
 declare const IS_PRODUCTION: boolean;
 
-if (!IS_PRODUCTION) {
-    console.log('Not production');
+// Check if the environment is not production.
+if (IS_PRODUCTION) {
+    console.log('Production build');
+} else {
+    console.log('Debug build');
 
+    // Set up a listener for changes in the development environment.
     new EventSource('/esbuild').addEventListener('change', (e: Event) => {
-        console.log('Change!!!');
-
         if (e instanceof MessageEvent) {
             const { added, removed, updated } = JSON.parse(e.data);
 
+            // If there are no added or removed files, but one updated file.
             if (!added.length && !removed.length && updated.length === 1) {
                 for (const link of document.getElementsByTagName('link')) {
                     const url = new URL(link.href);
 
-                    console.log(url);
+                    // TODO: Remove, debugging.
+                    console.log(`Reload URL: ${url}`);
 
                     if (url.host === location.host && url.pathname === updated[0]) {
                         const next = link.cloneNode() as HTMLLinkElement;
+
+                        // Append a random query string to force reload.
                         next.href = `${updated[0]}?${Math.random().toString(36).slice(2)}`;
+
+                        // remove the old link after the new one loads.
                         next.onload = () => link.remove();
+
+                        // Insert the new link after the old one.
                         link.parentNode?.insertBefore(next, link.nextSibling);
+
                         return;
                     }
                 }
             }
         }
 
+        // Reload the page if no specific updates were handled.
         location.reload();
     });
-} else {
-    console.log('Production');
 }
 
+/**
+ * Initialize the application.
+ */
 async function init(): Promise<void> {
-    // Define the game's internal resolution
     const gameWidth = 640;
     const gameHeight = 400;
-
-    // Define the desired display size
     const displayWidth = gameWidth * 2;
     const displayHeight = gameHeight * 2;
 
-    // Create the application
     const app = new Application();
 
-    // Initialize the app with the game resolution
     await app.init({
         width: gameWidth,
         height: gameHeight,
         backgroundColor: 0x1099bb,
-        hello: true,
         antialias: false,
         roundPixels: true,
     });
 
-    // Add the canvas to the DOM
     document.body.appendChild(app.canvas);
 
-    // Scale up the stage to fit the display size
     app.stage.scale.x = displayWidth / gameWidth;
     app.stage.scale.y = displayHeight / gameHeight;
 
-    // Adjust the canvas style to display at the larger size
     app.canvas.style.width = `${displayWidth}px`;
     app.canvas.style.height = `${displayHeight}px`;
 
-    // Create a red rectangle and add it to the stage
     const rectangle = new Sprite(Texture.WHITE);
     rectangle.tint = 0xffffff;
     rectangle.width = 40;
@@ -79,15 +81,9 @@ async function init(): Promise<void> {
     rectangle.anchor.set(0.5);
     app.stage.addChild(rectangle);
 
-    console.log('Rectangle added to stage');
-
-    // Listen for frame updates
     app.ticker.add(() => {
-        // rectangle.x += 0.001;
-        rectangle.rotation += 0.001; // Rotate slightly each frame
+        rectangle.rotation += 0.001;
     });
-
-    console.log('Ticker added');
 }
 
 init().catch(console.error);
