@@ -1,0 +1,29 @@
+{
+    "name": "pixi-esbuild-2",
+    "version": "0.0.1",
+    "main": "src/app.js",
+    "license": "MIT",
+    "scripts": {
+        "clean": "rimraf www/dist/*",
+        "build": "esbuild src/app.ts --outfile=www/dist/app.js --bundle --minify --format=esm --define:IS_PRODUCTION=true",
+        "dev": "npm run clean && esbuild src/app.ts --outfile=www/dist/app.js --bundle --sourcemap --watch --servedir=www --format=esm --define:IS_PRODUCTION=false",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "type-check": "tsc --noEmit",
+        "format": "prettier --write ."
+    },
+    "devDependencies": {
+        "@types/node": "^22.5.4",
+        "@types/pixi.js": "^5.0.0",
+        "@typescript-eslint/eslint-plugin": "^8.5.0",
+        "@typescript-eslint/parser": "^8.5.0",
+        "esbuild": "^0.23.1",
+        "eslint": "^9.10.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.2.1",
+        "pixi.js": "^8.4.0",
+        "prettier": "^3.3.3",
+        "rimraf": "^6.0.1",
+        "typescript": "^5.6.2"
+    }
+}
