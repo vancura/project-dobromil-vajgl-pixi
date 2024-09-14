@@ -1,20 +1,25 @@
 import { Application, Sprite, Texture, Container } from 'pixi.js';
 
 /**
- * Initialize the application.
+ * Initializes the game environment with specified settings including canvas
+ * dimensions, background color, and various animations such as a moving
+ * rectangle, and a star-field effect.
+ *
+ * @return {Promise<void>} A promise that resolves when the game initialization
+ * completes.
  */
 export async function gameInit(): Promise<void> {
     const gameWidth = 640;
     const gameHeight = 400;
-    const displayWidth = gameWidth * 1;
-    const displayHeight = gameHeight * 1;
+    const displayWidth = gameWidth * 2;
+    const displayHeight = gameHeight * 2;
 
     const app = new Application();
 
     await app.init({
         width: gameWidth,
         height: gameHeight,
-        backgroundColor: 0x000000, // Set background to black
+        backgroundColor: 0x000000, // Set the background to black
         antialias: false,
         roundPixels: true,
     });
@@ -26,54 +31,12 @@ export async function gameInit(): Promise<void> {
     app.canvas.style.width = `${displayWidth}px`;
     app.canvas.style.height = `${displayHeight}px`;
 
-    // Rectangle Animation
-    const rectangle = new Sprite(Texture.WHITE);
-    rectangle.tint = 0xffffff;
-    rectangle.width = 40;
-    rectangle.height = 40;
-    rectangle.anchor.set(0.5);
-    app.stage.addChild(rectangle);
-
-    const corners = [
-        { x: 0, y: 0 },
-        { x: gameWidth, y: 0 },
-        { x: gameWidth, y: gameHeight },
-        { x: 0, y: gameHeight },
-    ];
-
-    let cornerIndex = 0;
-    let startTime = 0;
-    const moveDuration = 2000; // Duration to move between corners in milliseconds
-
-    function animateRectangle(deltaTime: number) {
-        if (startTime === 0) startTime = performance.now();
-        const currentTime = performance.now();
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / moveDuration, 1);
-
-        // Ease-in-out function
-        const easedProgress = 0.5 * (1 - Math.cos(Math.PI * progress));
-
-        const startPoint = corners[cornerIndex];
-        const endPoint = corners[(cornerIndex + 1) % corners.length];
-
-        rectangle.x = startPoint.x + (endPoint.x - startPoint.x) * easedProgress;
-        rectangle.y = startPoint.y + (endPoint.y - startPoint.y) * easedProgress;
-
-        if (progress >= 1) {
-            cornerIndex = (cornerIndex + 1) % corners.length;
-            startTime = currentTime;
-        }
-    }
-
-    app.ticker.add(animateRectangle);
-
     // Starfield Effect
     const starContainer = new Container();
     app.stage.addChild(starContainer);
 
     const stars: Sprite[] = [];
-    const starCount = 100;
+    const starCount = 10000;
     const warpSpeedMultiplier = 5;
     let isWarping = false;
     let warpStartTime = 0;
@@ -82,32 +45,36 @@ export async function gameInit(): Promise<void> {
 
     for (let i = 0; i < starCount; i++) {
         const star = new Sprite(Texture.WHITE);
-        star.tint = 0xffffff;
+        star.tint = 0x00ffff * (Math.random() * 0.5 + 0.5);
         star.width = 2;
         star.height = 2;
+        star.alpha = 0.3;
         resetStar(star);
         stars.push(star);
         starContainer.addChild(star);
     }
 
+    /**
+     * Resets the position, speed, and direction of the given star sprite.
+     * @param {Sprite} star - The star sprite to be reset.
+     * @return {void}
+     */
     function resetStar(star: Sprite) {
-        star.x = gameWidth / 2;
-        star.y = gameHeight / 2;
-        star.speed = Math.random() * 2 + 1;
+        star.x = gameWidth / 4;
+        star.y = gameHeight / 4;
+        star.speed = Math.random() * 0.0001 + 0;
         star.direction = Math.random() * Math.PI * 2;
     }
 
-    function animateStars(deltaTime: number) {
+    /**
+     * Animate the stars by updating their positions and speeds. Stars will trigger a warp effect every 10 seconds,
+     * increasing their speed temporarily. When a star moves out of bounds, it will be reset to its initial position.
+     * @return {void} This method does not return a value.
+     */
+    function animateStars() {
         const currentTime = performance.now();
 
-        // Trigger warp effect every 10 seconds
-        if (currentTime - lastWarpTime >= 10000 && !isWarping) {
-            isWarping = true;
-            warpStartTime = currentTime;
-            lastWarpTime = currentTime;
-        }
-
-        let speedMultiplier = 1;
+        let speedMultiplier = 0.5;
         if (isWarping) {
             speedMultiplier = warpSpeedMultiplier;
             if (currentTime - warpStartTime >= warpDuration) {
