@@ -31,7 +31,7 @@ export async function gameInit(): Promise<void> {
     app.canvas.style.width = `${displayWidth}px`;
     app.canvas.style.height = `${displayHeight}px`;
 
-    // Starfield Effect
+    // Star-field Effect
     const starContainer = new Container();
     app.stage.addChild(starContainer);
 
@@ -41,7 +41,6 @@ export async function gameInit(): Promise<void> {
     let isWarping = false;
     let warpStartTime = 0;
     const warpDuration = 3000; // Warp effect lasts for 3 seconds
-    let lastWarpTime = performance.now();
 
     for (let i = 0; i < starCount; i++) {
         const star = new Sprite(Texture.WHITE);
@@ -62,7 +61,7 @@ export async function gameInit(): Promise<void> {
     function resetStar(star: Sprite) {
         star.x = gameWidth / 4;
         star.y = gameHeight / 4;
-        star.speed = Math.random() * 0.0001 + 0;
+        star.speed = Math.random() * 0.0001;
         star.direction = Math.random() * Math.PI * 2;
     }
 
