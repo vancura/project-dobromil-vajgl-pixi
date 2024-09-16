@@ -1,13 +1,5 @@
-import { Application, Sprite, Texture, Container } from 'pixi.js';
+import { Application, Graphics } from 'pixi.js';
 
-/**
- * Initializes the game environment with specified settings including canvas
- * dimensions, background color, and various animations such as a moving
- * rectangle, and a star-field effect.
- *
- * @return {Promise<void>} A promise that resolves when the game initialization
- * completes.
- */
 export async function gameInit(): Promise<void> {
     const gameWidth = 640;
     const gameHeight = 400;
@@ -19,81 +11,101 @@ export async function gameInit(): Promise<void> {
     await app.init({
         width: gameWidth,
         height: gameHeight,
-        backgroundColor: 0x000000, // Set the background to black
+        backgroundColor: 0x111111,
         antialias: false,
         roundPixels: true,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
     });
 
     document.body.appendChild(app.canvas);
 
-    app.stage.scale.set(displayWidth / gameWidth);
-
     app.canvas.style.width = `${displayWidth}px`;
     app.canvas.style.height = `${displayHeight}px`;
 
-    // Star-field Effect
-    const starContainer = new Container();
-    app.stage.addChild(starContainer);
+    // Create the pigeon
+    const pigeon = new Graphics();
 
-    const stars: Sprite[] = [];
-    const starCount = 10000;
-    const warpSpeedMultiplier = 5;
-    let isWarping = false;
-    let warpStartTime = 0;
-    const warpDuration = 3000; // Warp effect lasts for 3 seconds
+    // Draw the body (ellipse)
+    pigeon.ellipse(0, 0, 20, 40);
+    pigeon.fill(0x888888);
 
-    for (let i = 0; i < starCount; i++) {
-        const star = new Sprite(Texture.WHITE);
-        star.tint = 0x00ffff * (Math.random() * 0.5 + 0.5);
-        star.width = 2;
-        star.height = 2;
-        star.alpha = 0.3;
-        resetStar(star);
-        stars.push(star);
-        starContainer.addChild(star);
-    }
+    // Draw the head (circle) at one end of the body
+    pigeon.circle(0, -40, 10);
+    pigeon.fill(0x555555);
 
-    /**
-     * Resets the position, speed, and direction of the given star sprite.
-     * @param {Sprite} star - The star sprite to be reset.
-     * @return {void}
-     */
-    function resetStar(star: Sprite) {
-        star.x = gameWidth / 4;
-        star.y = gameHeight / 4;
-        star.speed = Math.random() * 0.0001;
-        star.direction = Math.random() * Math.PI * 2;
-    }
+    // Set the initial position
+    pigeon.x = gameWidth / 2;
+    pigeon.y = gameHeight / 2;
 
-    /**
-     * Animate the stars by updating their positions and speeds. Stars will trigger a warp effect every 10 seconds,
-     * increasing their speed temporarily. When a star moves out of bounds, it will be reset to its initial position.
-     * @return {void} This method does not return a value.
-     */
-    function animateStars() {
-        const currentTime = performance.now();
+    // Set the pivot point to the center of the body for proper rotation.
+    pigeon.pivot.set(0, 0);
 
-        let speedMultiplier = 0.5;
-        if (isWarping) {
-            speedMultiplier = warpSpeedMultiplier;
-            if (currentTime - warpStartTime >= warpDuration) {
-                isWarping = false;
-            }
+    app.stage.addChild(pigeon);
+
+    // Keyboard input handling
+    const keys: Record<string, boolean> = {
+        ArrowLeft: false,
+        ArrowRight: false,
+        ArrowUp: false,
+        ArrowDown: false,
+        Space: false,
+    };
+
+    window.addEventListener('keydown', e => {
+        if (e.code in keys) {
+            keys[e.code] = true;
+        }
+    });
+
+    window.addEventListener('keyup', e => {
+        if (e.code in keys) {
+            keys[e.code] = false;
+        }
+    });
+
+    const speed = 2;
+    const rotationSpeed = 0.05;
+
+    app.ticker.add(delta => {
+        // Rotate the pigeon
+        if (keys.ArrowLeft) {
+            pigeon.rotation -= rotationSpeed * delta.deltaTime;
+        }
+        if (keys.ArrowRight) {
+            pigeon.rotation += rotationSpeed * delta.deltaTime;
         }
 
-        stars.forEach(star => {
-            star.x += Math.cos(star.direction) * star.speed * speedMultiplier;
-            star.y += Math.sin(star.direction) * star.speed * speedMultiplier;
-            star.speed += 0.05 * speedMultiplier;
+        // Move the pigeon
+        let moveSpeed = 0;
 
-            const outOfBounds =
-                star.x < 0 || star.x > gameWidth || star.y < 0 || star.y > gameHeight;
+        if (keys.ArrowUp) {
+            moveSpeed = speed;
+        }
+        if (keys.ArrowDown) {
+            moveSpeed = -speed;
+        }
+        if (keys.Space) {
+            moveSpeed = speed * 20;
+            keys.Space = false;
+        }
 
-            if (outOfBounds) {
-                resetStar(star);
-            }
-        });
-    }
+        if (moveSpeed !== 0) {
+            const dx = Math.sin(pigeon.rotation) * moveSpeed * delta.deltaTime;
+            const dy = -Math.cos(pigeon.rotation) * moveSpeed * delta.deltaTime;
 
-    app.ticker.add(animateStars);
+            pigeon.x += dx;
+            pigeon.y += dy;
+
+            // Collision detection with screen edges
+            const leftBound = 0;
+            const rightBound = gameWidth;
+            const topBound = 0;
+            const bottomBound = gameHeight;
+
+            // Ensure the pigeon doesn't go off-screen
+            pigeon.x = Math.max(leftBound, Math.min(pigeon.x, rightBound));
+            pigeon.y = Math.max(topBound, Math.min(pigeon.y, bottomBound));
+        }
+    });
 }
