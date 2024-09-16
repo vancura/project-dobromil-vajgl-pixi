@@ -1,5 +1,14 @@
 import { Application, Graphics } from 'pixi.js';
 
+const pigeonWidth = 20;
+const pigeonHeight = 40;
+const pigeonBodyColor = 0x888888;
+const pigeonHeadColor = 0x555555;
+
+const pigeonHeadOffs = -40;
+const pigeonHeadRadius = 10;
+const jumpDistanceMultiplier = 20;
+
 export async function gameInit(): Promise<void> {
     const gameWidth = 640;
     const gameHeight = 400;
@@ -27,12 +36,12 @@ export async function gameInit(): Promise<void> {
     const pigeon = new Graphics();
 
     // Draw the body (ellipse)
-    pigeon.ellipse(0, 0, 20, 40);
-    pigeon.fill(0x888888);
+    pigeon.ellipse(0, 0, pigeonWidth, pigeonHeight);
+    pigeon.fill(pigeonBodyColor);
 
     // Draw the head (circle) at one end of the body
-    pigeon.circle(0, -40, 10);
-    pigeon.fill(0x555555);
+    pigeon.circle(0, pigeonHeadOffs, pigeonHeadRadius);
+    pigeon.fill(pigeonHeadColor);
 
     // Set the initial position
     pigeon.x = gameWidth / 2;
@@ -86,7 +95,7 @@ export async function gameInit(): Promise<void> {
             moveSpeed = -speed;
         }
         if (keys.Space) {
-            moveSpeed = speed * 20;
+            moveSpeed = speed * jumpDistanceMultiplier;
             keys.Space = false;
         }
 
