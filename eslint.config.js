@@ -4,7 +4,7 @@ const prettierPlugin = require('eslint-plugin-prettier');
 
 module.exports = [
     {
-        files: ['*.ts', '*.tsx'],
+        files: ['**/*.ts', '**/*.tsx'],
         languageOptions: {
             parser: typescriptParser,
             parserOptions: {
@@ -30,6 +30,18 @@ module.exports = [
             '@typescript-eslint/no-misused-promises': 'error',
             eqeqeq: ['error', 'always'],
             'no-console': ['warn', { allow: ['warn', 'error'] }],
+            // Add the following rule for magic number detection
+            '@typescript-eslint/no-magic-numbers': [
+                'warn',
+                {
+                    ignoreArrayIndexes: true,
+                    ignoreDefaultValues: true,
+                    ignore: [-1, 0, 1, 2],
+                    ignoreEnums: true,
+                    ignoreNumericLiteralTypes: true,
+                    ignoreReadonlyClassProperties: true,
+                },
+            ],
         },
     },
 ];
